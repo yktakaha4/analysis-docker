@@ -1,0 +1,16 @@
+#!/bin/sh -eu
+
+case "$1" in
+  create_db)
+    exec /root/bin/create_db
+    ;;
+  supervisord)
+    exec /usr/bin/supervisord -c /root/etc/supervisord.conf
+    ;;
+  luigid)
+    exec /root/bin/luigid
+    ;;
+  *)
+    exec "$@"
+    ;;
+esac

@@ -1,0 +1,72 @@
+version: '2'
+services:
+  server:
+    image: redash/redash:5.0.2.b5486
+    command: server
+    depends_on:
+      - postgres
+      - redis
+      - luigi
+    ports:
+      - "25000:5000"
+    environment:
+      PYTHONUNBUFFERED: 0
+      REDASH_LOG_LEVEL: "INFO"
+      REDASH_REDIS_URL: "redis://redis:6379/0"
+      REDASH_DATABASE_URL: "postgresql://postgres@postgres/postgres"
+      REDASH_COOKIE_SECRET: veryverysecret
+      REDASH_WEB_WORKERS: 4
+    restart: always
+  worker:
+    image: redash/redash:5.0.2.b5486
+    command: scheduler
+    environment:
+      PYTHONUNBUFFERED: 0
+      REDASH_LOG_LEVEL: "INFO"
+      REDASH_REDIS_URL: "redis://redis:6379/0"
+      REDASH_DATABASE_URL: "postgresql://postgres@postgres/postgres"
+      QUEUES: "queries,scheduled_queries,celery"
+      WORKERS_COUNT: 2
+    restart: always
+  redis:
+    image: redis:3.0-alpine
+    restart: always
+  postgres:
+    image: postgres:9.5.6-alpine
+    volumes:
+      - ./volumes/postgres-data:/var/lib/postgresql/data
+    restart: always
+  luigi:
+    build: "./luigi"
+    depends_on:
+      - postgres
+    environment:
+      ANALYSIS_BATCH_DATABASE_BASE_URL: "postgresql://postgres@postgres/"
+      ANALYSIS_BATCH_DATABASE_SUMMARY_URL: "postgresql://postgres@postgres/summary"
+      ANALYSIS_BASE_PATH: "/root/analysis"
+      ANALYSIS_BATCH_PATH: "/root/analysis/batch"
+      ANALYSIS_DATA_PATH: "/root/analysis/data"
+      PYTHONPATH: "/root/analysis/batch"
+      LUIGI_CONFIG_PATH: "/root/etc/luigi/luigi.cfg"
+    volumes:
+      - ./volumes/luigi-state:/root/analysis/luigi/state
+      - ./volumes/analysis-batch:/root/analysis/batch
+      - ./volumes/analysis-data:/root/analysis/data
+    restart: always
+    ports:
+      - "25001:8082"
+  jupyterlab:
+    image: jupyter/tensorflow-notebook:14fdfbf9cfc1
+    user: root
+    environment:
+      NB_UID: 1000
+      NB_GID: 100
+      GRANT_SUDO: "yes"
+    volumes:
+      - ./volumes/analysis-data:/home/jovyan/data
+      - ./volumes/jupyterlab-work:/home/jovyan/work
+    privileged: true
+    restart: always
+    ports:
+      - "25002:8888"
+    command: start.sh jupyter lab --NotebookApp.token=''

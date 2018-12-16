@@ -1,0 +1,5 @@
+#!/bin/sh -eu
+
+mkdir -p "$ANALYSIS_DATA_PATH/watch" "$ANALYSIS_BATCH_PATH/configs/load_files" > /dev/null
+
+inotifywait --format '%w%f' -e attrib -qmr "$ANALYSIS_DATA_PATH/watch" | xargs -I@ luigi --module batch.analysis.load_files analysis.LoadFilesTask --source-files-path "@" --definition-files-path "$ANALYSIS_BATCH_PATH/configs/load_files"

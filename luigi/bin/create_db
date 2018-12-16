@@ -1,0 +1,9 @@
+#!/bin/sh -eu
+
+ddl=$(mktemp)
+cat << EOF > "$ddl"
+drop database if exists summary;
+create database summary;
+EOF
+
+psql "$ANALYSIS_BATCH_DATABASE_BASE_URL" -ef "$ddl"

@@ -1,0 +1,9 @@
+luigi==2.7.9
+boto3==1.9.58
+psycopg2==2.7.6.1
+sqlalchemy==1.2.14
+mysqlclient==1.3.13
+python-dotenv==0.9.1
+PyYAML==3.13
+# https://stackoverflow.com/questions/49037742/why-does-it-take-ages-to-install-pandas-on-alpine-linux
+# pandas==0.23.4
